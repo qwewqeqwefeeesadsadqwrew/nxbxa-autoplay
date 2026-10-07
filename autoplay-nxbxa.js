@@ -66,10 +66,73 @@
     return Date.now();
   }
 
-  // ---------- 合成鼠标（引擎鼠标通道） ----------
+  // ---------- 合成输入 ----------
+  // 电脑浏览器：走鼠标通道；手机浏览器（引擎判定 isMobile 时压根不注册鼠标监听）：
+  // 同样的动作换成触摸事件发出去，游戏才认。
+  var TOUCH_MODE = null;
+  function isTouchMode() {
+    if (TOUCH_MODE === null) {
+      try {
+        TOUCH_MODE = !!(window.cc && cc.sys && cc.sys.isMobile);
+      } catch (e) {
+        TOUCH_MODE = false;
+      }
+    }
+    return TOUCH_MODE;
+  }
+  function makeTouch(cv, x, y, id) {
+    var o = {
+      identifier: id,
+      target: cv,
+      clientX: Math.round(x),
+      clientY: Math.round(y),
+      pageX: Math.round(x),
+      pageY: Math.round(y),
+      screenX: Math.round(x),
+      screenY: Math.round(y),
+      radiusX: 2.5,
+      radiusY: 2.5,
+      rotationAngle: 0,
+      force: 1,
+    };
+    try {
+      return new Touch(o);
+    } catch (e) {
+      return o;
+    }
+  }
+  function fireTouch(cv, type, x, y) {
+    var name =
+      type === "mousedown" ? "touchstart" : type === "mouseup" ? "touchend" : type === "mousemove" ? "touchmove" : null;
+    if (!name) return;
+    var t = makeTouch(cv, x, y, 1);
+    var list = name === "touchend" ? [] : [t];
+    var ev = null;
+    try {
+      ev = new TouchEvent(name, {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        touches: list,
+        targetTouches: list,
+        changedTouches: [t],
+      });
+    } catch (e) {
+      // 老浏览器没有 TouchEvent 构造器：用 CustomEvent 补上触摸数组
+      ev = new CustomEvent(name, { bubbles: true, cancelable: true });
+      ev.touches = list;
+      ev.targetTouches = list;
+      ev.changedTouches = [t];
+    }
+    cv.dispatchEvent(ev);
+  }
   function fire(type, x, y, buttons) {
     var cv = document.getElementById("GameCanvas");
     if (!cv) return;
+    if (isTouchMode()) {
+      fireTouch(cv, type, x, y);
+      return;
+    }
     cv.dispatchEvent(
       new MouseEvent(type, {
         clientX: Math.round(x),
