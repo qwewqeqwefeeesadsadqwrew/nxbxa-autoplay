@@ -39,7 +39,7 @@
   }
 
   // 先装补丁壳，再拉官方启动脚本（会被 hook 改写），最后挂自动玩
-  loadScript(dir + 'hook.js', function () {
+  loadScript(dir + 'hook.js?v=2', function () {
     loadScript('src/settings.7557d.js', function () {
       loadScript('main.efc63.js', function () {
         var splash = document.getElementById('splash');
@@ -51,7 +51,7 @@
           } else {
             window.boot();
           }
-          loadScript(dir + 'autoplay-nxbxa.js');
+          loadScript(dir + 'autoplay-nxbxa.js?v=2');
         });
       });
     });
