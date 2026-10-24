@@ -1051,7 +1051,13 @@
             return p.yTop != null && p.w > 20;
           })[0];
         if (pg && pg.yTop != null && pg.h > 50 && pg.css) {
-          PARK = [pg.css[0], Math.round(pg.yTop + F_PARK * pg.h)];
+          // 举卡位：高度照样跟着大图算，但 x 固定在画布中心、只加 ±4% 画布宽的小抖动。
+          // 原来用 pg.css[0]（当前页中心），不同页中心不一样，举着的位置会左右乱飘。
+          var vv = viewCtx();
+          var cx = vv.r.width / 2;
+          var jx = (Math.random() * 2 - 1) * vv.r.width * 0.04;
+          PARK = [Math.round(cx + jx), Math.round(pg.yTop + F_PARK * pg.h)];
+          AP.lastPark = PARK.slice();   // 便于外部核对举卡位是否稳定在画布中心
         }
         // 记录「拿起卡时大图停在哪一页」——目标就在这页时也要等它转一圈
         pickupPage = sP.err ? null : sP.pageIndex;

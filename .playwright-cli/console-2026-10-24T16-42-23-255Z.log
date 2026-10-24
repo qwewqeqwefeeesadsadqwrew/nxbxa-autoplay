@@ -1,0 +1,30 @@
+[    1428ms] [LOG] [nxbxa] patched (main) - 3914KB - assets/main/index.700e9.js @ http://127.0.0.1:8833/hook.js?v=2:156
+[    1845ms] [LOG] Cocos Creator v2.4.15 @ https://cgame.hulumao.top/nxbxa/web/cocos2d-js-min.69cce.js:0
+[    2061ms] [LOG] Success to load scene: db://assets/first/login.fire @ https://cgame.hulumao.top/nxbxa/web/main.efc63.js:78
+[    2821ms] [LOG] 刷新签到 @ blob:http://127.0.0.1:8833/3b5da538-eece-4fff-83d6-081733b230d0:0
+[    2945ms] [LOG] [nxbxa] patched (stagebg) - 43KB - assets/stagebg/index.804de.js @ http://127.0.0.1:8833/hook.js?v=2:156
+[    3043ms] [LOG] 可签到 @ blob:http://127.0.0.1:8833/3b5da538-eece-4fff-83d6-081733b230d0:0
+[    3574ms] [LOG] 0 this.day @ blob:http://127.0.0.1:8833/f97e38fd-f7f0-46a5-96d9-0306fa0c0c20:0
+[    3575ms] [LOG] 0 this.day @ blob:http://127.0.0.1:8833/f97e38fd-f7f0-46a5-96d9-0306fa0c0c20:0
+[    5962ms] [LOG] [自动玩] 5.3s 自动玩启动（7 关随机关卡） @ http://127.0.0.1:8833/autoplay-nxbxa.js?v=3:47
+[    5962ms] [LOG] [自动玩] 5.3s 第 1 轮随机顺序：112 → 111 → 106 → 76 → 109 → 105 → 82 @ http://127.0.0.1:8833/autoplay-nxbxa.js?v=3:47
+[   11249ms] [LOG] {lasttime: null, reward: 0, isget: 0} 0 0 @ blob:http://127.0.0.1:8833/f97e38fd-f7f0-46a5-96d9-0306fa0c0c20:0
+[   11252ms] [LOG] false 0 @ blob:http://127.0.0.1:8833/3b5da538-eece-4fff-83d6-081733b230d0:0
+[   11253ms] [LOG] {lasttime: null, reward: 0, isget: 0} 0 0 @ blob:http://127.0.0.1:8833/f97e38fd-f7f0-46a5-96d9-0306fa0c0c20:0
+[   24746ms] [LOG] 是否相等: true @ blob:http://127.0.0.1:8833/b3169c04-bb32-49f0-bb79-84278b62b740:0
+[   24746ms] [LOG] arr2 中多出的元素: [] @ blob:http://127.0.0.1:8833/b3169c04-bb32-49f0-bb79-84278b62b740:0
+[   24746ms] [LOG] arr1 中多出的元素: [] @ blob:http://127.0.0.1:8833/b3169c04-bb32-49f0-bb79-84278b62b740:0
+[   24754ms] [LOG] Cocos Creator v2.4.15 @ https://cgame.hulumao.top/nxbxa/web/cocos2d-js-min.69cce.js:0
+[   24867ms] [LOG] Success to load scene: db://assets/first/login.fire @ https://cgame.hulumao.top/nxbxa/web/main.efc63.js:78
+[   25138ms] [LOG] 刷新签到 @ blob:http://127.0.0.1:8833/b3169c04-bb32-49f0-bb79-84278b62b740:0
+[   25383ms] [LOG] 可签到 @ blob:http://127.0.0.1:8833/b3169c04-bb32-49f0-bb79-84278b62b740:0
+[   25466ms] [LOG] 0 this.day @ blob:http://127.0.0.1:8833/59efc3f0-2107-410b-9fd8-50592b089b92:0
+[   25466ms] [LOG] 0 this.day @ blob:http://127.0.0.1:8833/59efc3f0-2107-410b-9fd8-50592b089b92:0
+[   27703ms] [LOG] [自动玩] 3.2s 自动玩启动（7 关随机关卡） @ http://127.0.0.1:8833/autoplay-nxbxa.js?v=3:47
+[   27704ms] [LOG] [自动玩] 3.2s 第 1 轮随机顺序：82 → 111 → 109 → 106 → 105 → 76 → 112 @ http://127.0.0.1:8833/autoplay-nxbxa.js?v=3:47
+[   34353ms] [LOG] {lasttime: null, reward: 0, isget: 0} 0 0 @ blob:http://127.0.0.1:8833/59efc3f0-2107-410b-9fd8-50592b089b92:0
+[   34356ms] [LOG] false 0 @ blob:http://127.0.0.1:8833/b3169c04-bb32-49f0-bb79-84278b62b740:0
+[   34357ms] [LOG] {lasttime: null, reward: 0, isget: 0} 0 0 @ blob:http://127.0.0.1:8833/59efc3f0-2107-410b-9fd8-50592b089b92:0
+[   64827ms] [LOG] item6 item6 @ blob:http://127.0.0.1:8833/b3169c04-bb32-49f0-bb79-84278b62b740:0
+[   66876ms] [LOG] [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0] @ blob:http://127.0.0.1:8833/b3169c04-bb32-49f0-bb79-84278b62b740:0
+[   66876ms] [LOG] 7 this.pageViewIndex11 @ blob:http://127.0.0.1:8833/b3169c04-bb32-49f0-bb79-84278b62b740:0
