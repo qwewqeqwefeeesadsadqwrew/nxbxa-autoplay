@@ -599,6 +599,7 @@
     var F_DROP = CENTER_DROP ? 0.5 : 0.6525;
     var F_PARK = CENTER_DROP ? 0.473 : 0.701;
     var PARK = [618, 316];
+    var pickupPage = null;   // 拿起卡时大图停在哪一页（用于「不能当前页直接配」）
     var st = READ();
     if (st.err) {
       log("进关后读状态失败 " + st.err);
@@ -756,16 +757,22 @@
       var prevPg = null;
       var hits = 0;
       var seen = [];
+      var turnedAway = false;   // 是否已经翻离过拿起卡时那一页
       while (now() - t1 < maxWaitMs) {
         var cur = READ();
         if (cur.err) return { ok: false, why: "no-game" };
         noteFlip(cur.pageIndex);
+        if (pickupPage !== null && cur.pageIndex !== pickupPage) turnedAway = true;
         if (cur.pageIndex !== prevPg) {
           if (seen.length < 30) seen.push([Math.round((now() - t1) / 100) / 10, cur.pageIndex]);
           prevPg = cur.pageIndex;
         }
         var tg = cur.pages[targetPage];
-        if (cur.pageIndex === targetPage && !cur.pvScrolling && tg && tg.active && tg.css) {
+        // 目标就在拿起的那一页时，举着等它翻走、转一圈回来再放，不在原地直接配
+        // 收尾例外：只剩 4 张（含）以内时，目标就在当前页可以直接放，不用再等一圈
+        var tailRelax = unmatched.length <= 4;
+        var mustWaitTurn = (targetPage === pickupPage) && !turnedAway && !tailRelax;
+        if (cur.pageIndex === targetPage && !cur.pvScrolling && !mustWaitTurn && tg && tg.active && tg.css) {
           hits++;
           var ctr = tg.css;
           var drop = tg.yTop != null && tg.h > 50 ? [ctr[0], Math.round(tg.yTop + F_DROP * tg.h)] : ctr;
@@ -820,11 +827,13 @@
     var rounds = 0;
     var stuck = 0;
     var result = { ok: false, why: "loop-end" };
-    while (rounds++ < 24) {
+    while (rounds++ < 60) {   // 慢节奏下每关可能要 20~30 轮才做完
       try {
       // 超时看门狗
-      if (now() - t0 > 6.5 * 60 * 1000) {
-        result = { ok: false, why: "整关超 6.5 分钟" };
+      // 看门狗放宽到 20 分钟：改成「随机拿可见卡 + 目标就在当前页也要等一圈」后，
+      // 10 页大图每块要等 20~40 秒，一关 10 块就可能 5~7 分钟，6.5 分钟会误杀
+      if (now() - t0 > 20 * 60 * 1000) {
+        result = { ok: false, why: "整关超 20 分钟" };
         break;
       }
       var lay = layerState();
@@ -938,6 +947,19 @@
       }
       var card = null;
       var s1 = st;
+      // 优先：从当前露出来的卡里随机挑一张（像真人一样，看到什么拿什么，
+      // 不按「哪页最近会转过来」去挑）。要求这张卡对应的页还没完成。
+      {
+        var visCands = (s1.cards || []).filter(function (c) {
+          if (!c.active || !c.item || !inWin(s1, c)) return false;
+          var pn = Number(String(c.item).replace("item", ""));
+          return unmatched.indexOf(pn) >= 0;
+        });
+        if (visCands.length) {
+          card = visCands[Math.floor(Math.random() * visCands.length)];
+          log("从可见 " + visCands.length + " 张里随手拿的：" + card.item);
+        }
+      }
       for (var attempt = 0; attempt < 4 && !card; attempt++) {
         var order = orderOf(s1);
         if (!order.length) break;
@@ -1031,6 +1053,8 @@
         if (pg && pg.yTop != null && pg.h > 50 && pg.css) {
           PARK = [pg.css[0], Math.round(pg.yTop + F_PARK * pg.h)];
         }
+        // 记录「拿起卡时大图停在哪一页」——目标就在这页时也要等它转一圈
+        pickupPage = sP.err ? null : sP.pageIndex;
       }
       await liftCard(card.css);
       var chkLift = await READ();
@@ -1070,7 +1094,7 @@
           continue;
         }
       }
-      var r1 = await holdAndDrop(targetPage, 60000);
+      var r1 = await holdAndDrop(targetPage, 120000);   // 10 页大图转一圈要 50s，60s 不够
       if (!r1.ok) {
         log("     ✗ " + r1.why + (r1.seen && r1.seen.length > 6 ? "；页序 " + JSON.stringify(r1.seen) : ""));
         await sleep(300);
@@ -1183,6 +1207,48 @@
     }
   }
 
+  // ---------- 直接跳关（不回主页）----------
+  // 用游戏自己的底层接口 G.loadjoingame(id)：
+  //   loadjoingame(e) { gamenode.active=false; desallnode(); curStageId=e; loadResByBundle("stageload"...) }
+  // 实测可用（约 8 秒加载完，hasPai/gamenode 都正常）。
+  //
+  // ⚠ 两个坑：
+  //   1. 不要用 loadandjoingame —— 它先查 stage[id].kong，在非关卡状态下会失效（curStageId 仍为 -1）
+  //   2. 通关后 succesLayer 不会自己关：它挡着加载，还会让 playStage 一进去就读到
+  //      「已通关」，误判成 0 块秒过。必须先 active=false 再加载。
+  async function enterStageDirect(id) {
+    var g = G();
+    if (!g) return false;
+    var canvas = cc.find("Canvas");
+    var sl = canvas && canvas.getChildByName("succesLayer");
+    // 结算画面停一下（观赏节奏，观众看得到成绩），然后关掉
+    if (sl && sl.active) {
+      await sleep(2600 + Math.random() * 1300);
+      sl.active = false;
+      await sleep(300);
+    }
+    log("直接加载关卡 " + id);
+    try {
+      g.loadjoingame(id);
+    } catch (e) {
+      log("加载异常 " + ((e && e.message) || e));
+      return false;
+    }
+    // 等这一关真正可玩：READ() 能读出 paiNode 且 stage 已是目标关
+    var t0 = now();
+    while (now() - t0 < 40000) {
+      if (!AP.running) return false;
+      var r = READ();
+      if (!r.err && r.stage === id) {
+        await sleep(1500);   // 场景就绪后再稳一下
+        return true;
+      }
+      await sleep(300);
+    }
+    log("加载超时 " + id);
+    return false;
+  }
+
   // ---------- 洗牌 ----------
   var STAGES = [106, 112, 105, 76, 82, 109, 111];
   function shuffled() {
@@ -1210,6 +1276,7 @@
   // ---------- 主循环 ----------
   var roundNo = 0;
   var lastPlayed = -1;
+  var firstStageDone = false;   // 第一关必须从大厅点卡片进，之后全部直接跳
   async function mainLoop() {
     // 等游戏引导就绪
     for (var i = 0; i < 120; i++) {
@@ -1235,19 +1302,27 @@
         var id = order[oi];
         AP.state.cur = id;
         try {
-        var entered = await enterStage(id);
+        // 第一关从大厅点卡片进；之后全用游戏自己的加载接口直接跳，不回主页
+        var entered;
+        if (!firstStageDone) {
+          entered = await enterStage(id);
+          if (entered) firstStageDone = true;
+        } else {
+          entered = await enterStageDirect(id);
+        }
         if (!entered) {
-          log("进关失败 " + id + "，回列表继续");
+          log("进关失败 " + id + "，回列表兜底");
           await ensureOnList();
+          await sleep(800);
           continue;
         }
         var res = await playStage(id);
         AP.state.lastResult = { id: id, res: res };
         log("关卡 " + id + " 结束：matched " + res.matched + "/" + res.n + "，错误次数 " + res.errNum + "，耗时 " + res.sec + "s（" + res.why + "）", true);
         if (res.ok) {
-          await leaveStage();
+          // 不回主页：结算画面的停顿已经在 enterStageDirect 里做了
           AP.state.done++;
-          await sleep(1300 + Math.random() * 1100); // 列表上停一下再点下一关
+          await sleep(400 + Math.random() * 400);
         } else {
           // 失败/超时中止：直接回列表，继续下一关
           var gl = G();
@@ -1268,6 +1343,8 @@
           await sleep(1200);
         }
       }
+      // 记录本轮最后一关，下一轮洗牌后若它又排第一就交换，避免连着两轮首尾同关
+      lastPlayed = order[order.length - 1];
       log("第 " + roundNo + " 轮完成，重新洗牌", true);
     }
   }
